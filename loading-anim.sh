@@ -33,65 +33,65 @@ _main() {
 	if [ ${#} -gt 0 ]; then
 		while getopts ":a:t:m:M:d:n:k:vh" opt; do
 			case "${opt}" in
-			a)
-				if [ "${OPTARG}" == "list" ]; then
-					_print_anim_list
-					return
-				fi
-				local anim_exists=false
-				for anim in "${_anim_list[@]}"; do
-					if [ "${OPTARG}" == "${anim}" ]; then
-						anim_exists=true
-						break
+				a)
+					if [ "${OPTARG}" == "list" ]; then
+						_print_anim_list
+						return
 					fi
-				done
-				if ${anim_exists}; then
-					anim="${OPTARG}"
-				else
-					_print_error_exit "Unknown animation '${OPTARG}'" 1
-				fi
-				;;
-			t)
-				local time="${OPTARG}"
-				;;
-			m)
-				local pre="${OPTARG}"
-				;;
-			M)
-				local post="${OPTARG}"
-				;;
-			d)
-				local duration="${OPTARG}"
-				;;
-			n)
-				local repeat="${OPTARG}"
-				;;
-			k)
-				_stop_anim "${OPTARG}"
-				return
-				;;
-			v)
-				_print_version
-				return
-				;;
-			h)
-				_print_usage
-				return
-				;;
-			:)
-				case "${OPTARG}" in
+					local anim_exists=false
+					for anim in "${_anim_list[@]}"; do
+						if [ "${OPTARG}" == "${anim}" ]; then
+							anim_exists=true
+							break
+						fi
+					done
+					if ${anim_exists}; then
+						anim="${OPTARG}"
+					else
+						_print_error_exit "Unknown animation '${OPTARG}'" 1
+					fi
+					;;
+				t)
+					local time="${OPTARG}"
+					;;
+				m)
+					local pre="${OPTARG}"
+					;;
+				M)
+					local post="${OPTARG}"
+					;;
+				d)
+					local duration="${OPTARG}"
+					;;
+				n)
+					local repeat="${OPTARG}"
+					;;
 				k)
-					_stop_anim
+					_stop_anim "${OPTARG}"
 					return
 					;;
-				*)
-					_print_error_exit "Option '${OPTARG}' requires an argument" 0
+				v)
+					_print_version
+					return
 					;;
-				esac
-				;;
-			?)
-				_print_error_exit "Unrecognized option '${OPTARG}'" 0
-				;;
+				h)
+					_print_usage
+					return
+					;;
+				:)
+					case "${OPTARG}" in
+						k)
+							_stop_anim
+							return
+							;;
+						*)
+							_print_error_exit "Option '${OPTARG}' requires an argument" 0
+							;;
+					esac
+					;;
+				?)
+					_print_error_exit "Unrecognized option '${OPTARG}'" 0
+					;;
 			esac
 		done
 		shift $((${OPTIND} - 1))
@@ -150,12 +150,12 @@ _print_mesg() {
 	local pre
 	local post
 	case "${2}" in
-	n)
-		pre="\n"
-		;;
-	N)
-		post="\n"
-		;;
+		n)
+			pre="\n"
+			;;
+		N)
+			post="\n"
+			;;
 	esac
 	printf "${pre}${1}${post}\n"
 }
@@ -216,12 +216,12 @@ _print_anim_list() {
 _print_error_exit() {
 	local post
 	case "${2}" in
-	0)
-		post=". Try '-h' for more information"
-		;;
-	1)
-		post=". Try '-a list' for list of available animations"
-		;;
+		0)
+			post=". Try '-h' for more information"
+			;;
+		1)
+			post=". Try '-a list' for list of available animations"
+			;;
 	esac
 	printf "${1}${post}\n"
 	exit 1
