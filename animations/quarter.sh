@@ -1,0 +1,5 @@
+# Name: quarter
+
+frames=(
+	'▖' '▘' '▝' '▗'
+)

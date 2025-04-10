@@ -1,0 +1,5 @@
+# Name: future
+
+frames=(
+	'┤' '┴' '├' '┬'
+)
