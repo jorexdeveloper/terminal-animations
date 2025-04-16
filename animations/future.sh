@@ -1,5 +1,5 @@
 # Name: future
 
-frames=(
+__animations__frames=(
 	'┤' '┴' '├' '┬'
 )

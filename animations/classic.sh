@@ -1,5 +1,5 @@
 # Name: classic
 
-frames=(
+__animations__frames=(
 	'-' '\' '|' '/'
 )

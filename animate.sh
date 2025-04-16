@@ -1,8 +1,9 @@
 #!/bin/bash
+# shellcheck disable=SC2155 disable=SC1090
 
 ################################################################################
 #                                                                              #
-#    terminal-animations 2025-1.0                                              #
+#    animate.sh 2025-1.0                                                       #
 #                                                                              #
 #    Displays a loading animation while executing a command.                   #
 #                                                                              #
@@ -22,17 +23,16 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.    #
 #                                                                              #
 ################################################################################
-# shellcheck disable=SC2155 disable=SC1090
 
 ################################################################################
-#                                FUNCTIONS                                     #
+#                               HELPER FUNCTIONS                               #
 ################################################################################
 
 # Prints a message with optional coloring.
 # Arguments:
 #   1. Message to print.
 #   2. Color code (r: red, g: green, y: yellow, b: blue, c: cyan). Default: none.
-msg() {
+__animations::msg() {
     local color
     case "${2}" in
         r) color="\033[1;31m" ;;
@@ -42,19 +42,7 @@ msg() {
         c) color="\033[1;36m" ;;
         *) color="\033[0m" ;;
     esac
-    printf "%b%-${term_width}s%b\n" "${color}" "${1}" "\033[0m"
-}
-
-# Lists all available animations in the animations directory.
-list_animations() {
-    if [[ -d "${animations_dir}" ]]; then
-        msg "Available animations:"
-        for anim in "${animations_dir}"/*.sh; do
-            [[ -f "${anim}" ]] && msg " - $(basename "${anim}" .sh)"
-        done
-    else
-        msg "Error: Animations directory '${animations_dir}' not found." "r"
-    fi
+    printf "\r${color}%-${__animations__term_width}s\033[0m\n" "${1}"
 }
 
 # Parses command-line options and sets animation and command variables.
@@ -62,229 +50,281 @@ list_animations() {
 #   Command-line options
 #   Remaining arguments are the command to execute.
 # Sets:
-#   frames, prefix, suffix, interval, animation_name, command, log_dir, animations_dir.
-parse_options() {
-    while getopts ":f:p:i:s:a:hlL:A:" opt; do
-        case "${opt}" in
-            f)
-                IFS=',' read -r -a frames <<<"${OPTARG}"
+#   __animations__frames, __animations__prefix, __animations__suffix, __animations__interval, __animations__animation_name, __animations__command, __animations__log_dir, __animations__animations_dir.
+__animations::options() {
+    if ! args="$(getopt -n "${__animations__program_name}" -o "f:a:i:p:s:A:L:lh" --long "frames:,animation:,interval:,prefix:,suffix:,animations-dir:,log-dir:,list,help" -- "${@}")"; then
+        return 1
+    fi
+    eval set -- "${args}"
+    while true; do
+        case "${1}" in
+            -f | --frames)
+                local ifs_old="${IFS}"
+                IFS=','
+                read -r -a __animations__frames <<<"${2}"
+                IFS="${ifs_old}"
+                shift 2 && continue
                 ;;
-            p)
-                prefix="${OPTARG}"
+            -a | --animation)
+                __animations__animation_name="${2}"
+                shift 2 && continue
                 ;;
-            i)
-                if [[ ! "${OPTARG}" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-                    msg "Error: Interval must be a positive number." "r"
-                    print_usage
-                    exit 1
+            -i | --interval)
+                if [[ ! "${2}" =~ ^[+]?([0-9]+)?(\.[0-9]+)?$ ]]; then
+                    __animations::msg "${__animations__program_name}: Invalid time interval '${2}'." "r"
+                    __animations::msg "Try '${__animations__program_name} --help' for more information."
+                    __animations::usage
+                    return 1
                 fi
-                interval="${OPTARG}"
+                __animations__interval="${2}"
+                shift 2 && continue
                 ;;
-            s)
-                suffix="${OPTARG}"
+            -p | --prefix)
+                __animations__prefix="${2}"
+                shift 2 && continue
                 ;;
-            a)
-                animation_name="${OPTARG}"
+            -s | --suffix)
+                __animations__suffix="${2}"
+                shift 2 && continue
                 ;;
-            h)
-                print_usage
-                exit
+            -A | --animations-dir)
+                __animations__animations_dir="$(realpath "${2}")"
+                shift 2 && continue
                 ;;
-            l)
-                list_animations
-                exit
+            -L | --logs-dir)
+                __animations__log_dir="$(realpath "${2}")"
+                shift 2 && continue
                 ;;
-            L)
-                log_dir="$(realpath "${OPTARG}")"
+            -l | --list)
+                __animations::list
+                return 5
                 ;;
-            A)
-                animations_dir="$(realpath "${OPTARG}")"
+            -h | --help)
+                __animations::usage
+                return 5
                 ;;
-            \?)
-                msg "Error: Invalid option '-${OPTARG}'" "r"
-                print_usage
-                exit 1
+            --)
+                shift && break
                 ;;
-            :)
-                msg "Error: Option '-${OPTARG}' requires an argument" "r"
-                print_usage
-                exit 1
-                ;;
+            *) return 2 ;;
         esac
     done
-    shift $((OPTIND - 1))
-    command=("${@}")
+    __animations__command=("${@}")
 }
 
 # Loads the specified animation script.
 # Variables:
-#   animation_name: Name of the animation to load.
-#   animations_dir: Directory containing animation scripts.
-load_animation() {
-    local animation_file="${animations_dir}/${animation_name}.sh"
+#   __animations__animation_name: Name of the animation to load.
+#   __animations__animations_dir: Directory containing animation scripts.
+__animations::load() {
+    local animation_file="${__animations__animations_dir}/${__animations__animation_name}.sh"
     if [[ -f "${animation_file}" ]]; then
         source "${animation_file}"
     else
-        msg "Error: Animation '${animation_name}' not found in '${animations_dir}' directory." "r"
-        exit 1
+        __animations::msg "${__animations__program_name}: Animation '${__animations__animation_name}' not found in '${__animations__animations_dir}' directory." "r"
+        __animations::msg "Make sure a file named '${__animations__animation_name}.sh' exists in that directory."
+        __animations::msg "Try '${__animations__program_name} --help' for more information."
+        return 1
     fi
 }
 
 # Starts a background animation.
 # Variables:
-#   frames: Array of animation frames.
-#   prefix: Text before the animation.
-#   suffix: Text after the animation.
-#   interval: Time interval between frames.
+#   __animations__frames: Array of animation frames.
+#   __animations__prefix: Text before the animation.
+#   __animations__suffix: Text after the animation.
+#   __animations__interval: Time interval between frames.
 # Sets:
-#   anim_pid: PID of the animation process.
-start_animation() {
-    # Display the animation
+#   __animations__animation_pid: PID of the animation process.
+__animations::start() {
     animate() {
+        trap 'printf "\r%-${__animations__term_width}s\r" ""; trap - EXIT' EXIT
         local frame
-        trap 'printf "\r"' EXIT
         while true; do
-            for frame in "${frames[@]}"; do
-                printf "\r%-${term_width}s" "${prefix}${frame}${suffix}"
-                sleep "${interval}"
+            for frame in "${__animations__frames[@]}"; do
+                printf "\r%-${__animations__term_width}s" "${__animations__prefix}${frame}${__animations__suffix}"
+                sleep "${__animations__interval}"
             done
         done
     }
-
-    stty -echo         # Hide input
-    printf "\033[?25l" # Hide cursor
-    animate &          # Run animation in the background
-    anim_pid=${!}      # Capture the PID of the animation process
+    stty -echo                       # Hide input
+    printf "\033[?25l"               # Hide cursor
+    animate 2>/dev/null &            # Run animation in the background
+    __animations__animation_pid=${!} # Capture the PID of the animation process
+    unset -f animate
 }
 
 # Stops the background animation and restores terminal settings.
 # Arguments:
 #   1. Animation PID to stop.
-stop_animation() {
-    local pid=${1}
+__animations::stop() {
+    local pid="${1}"
     if [[ -n "${pid}" ]]; then
         kill "${pid}" &>/dev/null
-        wait "${pid}" 2>/dev/null
+        wait "${pid}" &>/dev/null
         printf "\033[?25h" # Restore cursor
         stty echo          # Restore input
     fi
 }
 
 # Executes the specified command and logs its output.
+# Arguments:
+#   1. Command to be executed
+#   The rest are command arguments
 # Variables:
-#   command: Array containing the command and its arguments.
-#   log_file: Path to the log file.
-#   anim_pid: PID of the running animation process.
-execute_command() {
+#   __animations__command_name: Name of command being executed
+#   __animations__log_file: Path to the log file.
+__animations::execute() {
     local log_sep="$(printf '%*s' "25" '' | tr ' ' '=')"
     {
         echo -e "\n"
         echo "${log_sep}"
         echo "Date: $(date '+%Y-%m-%d %H:%M:%S')"
-        echo "Command: ${command_name}"
+        echo "Command: ${__animations__command_name}"
         echo -n "Arguments: "
-        if [[ ${#command[@]} -gt 1 ]]; then
-            echo "${command[@]:1}"
+        if [[ ${#__animations__command[@]} -gt 1 ]]; then
+            echo "${__animations__command[@]:1}"
         else
             echo "none"
         fi
-        echo "Animation: ${animation_name:-default}"
+        echo "Animation: ${__animations__animation_name:-default}"
         echo "${log_sep}"
-    } >>"${log_file}"
-    # Make sure to append to the log file
-    if "${command[@]}" &>>"${log_file}"; then
-        return # No messages before stop_animation
+    } >>"${__animations__log_file}"
+    __animations::start &&
+        trap '__animations::stop "${__animations__animation_pid}"; __animations::msg "${__animations__command_name} interrupted by user." "y"; trap - SIGINT; return 130' SIGINT
+    if "${@}" &>>"${__animations__log_file}"; then
+        __animations::stop "${__animations__animation_pid}" &&
+            trap - SIGINT
+        __animations::msg "${__animations__command_name} is done." "g"
     else
-        local err_sep="$(printf '%*s' "${term_width}" '' | tr ' ' '-')"
         local exit_code=${?}
-        local lines=10
-        stop_animation "${anim_pid}"
-        msg "Error ${exit_code}: ${command_name} failed!" "r"
-        msg "Here are the last ${lines} lines of the log: '${log_file}'"
-        msg "${err_sep}"
-        tail -n ${lines} "${log_file}" | while read -r line; do
-            msg "> ${line}" "r"
-        done
-        msg "${err_sep}"
-        exit ${exit_code}
+        if [ "${exit_code}" -eq 130 ]; then
+            __animations::stop "${__animations__animation_pid}" &&
+                trap - SIGINT
+            __animations::msg "${__animations__command_name} interrupted by user." "y"
+            return ${exit_code}
+        else
+            local err_sep="$(printf '%*s' "${__animations__term_width}" '' | tr ' ' '-')"
+            local lines=10
+            __animations::stop "${__animations__animation_pid}"
+            __animations::msg "Error ${exit_code}: ${__animations__command_name} failed!" "r"
+            __animations::msg "Here are the last ${lines} lines of the log: '${__animations__log_file}'"
+            __animations::msg "${err_sep}"
+            tail -n ${lines} "${__animations__log_file}" | while read -r line; do
+                __animations::msg "> ${line}" "r"
+            done
+            __animations::msg "${err_sep}"
+            return ${exit_code}
+        fi
+    fi
+}
+
+# Lists all available animations in the animations directory.
+__animations::list() {
+    if [[ -d "${__animations__animations_dir}" ]]; then
+        if [[ -z "$(ls -A "${__animations__animations_dir}")" ]]; then
+            __animations::msg "No animations found in '${__animations__animations_dir}'."
+        else
+            __animations::msg "Available animations:"
+            for anim in "${__animations__animations_dir}"/*.sh; do
+                if [[ -f "${anim}" ]]; then
+                    __animations::msg " - $(basename "${anim}" .sh)"
+                fi
+            done
+        fi
+    else
+        __animations::msg "${__animations__program_name}: Animations directory '${__animations__animations_dir}' not found." "r"
+        __animations::msg "Try '${__animations__program_name} --help' for more information."
     fi
 }
 
 # Prints usage information for the script.
 # Variables:
-#   script_name: Name of the script.
-print_usage() {
-    local script_name="$(basename "${0}")"
-    msg "Usage: ${script_name} [options] <command>"
-    msg ""
-    msg "Executes the specified command while displaying a loading animation."
-    msg ""
-    msg "Options:"
-    msg "  -f <frames>      Comma-separated list of animation frames."
-    msg "  -p <prefix>      Prefix text for the animation. Use <name> to include the command name."
-    msg "  -s <suffix>      Suffix text for the animation. Use <name> to include the command name."
-    msg "  -i <seconds>     Time interval between frames. (default: 0.2)"
-    msg "  -a <name>        Name of the animation to use. (default: dots)"
-    msg "  -l               List all available animations."
-    msg "  -h               Display this help message."
-    msg "  -L <path>        Custom directory for storing log files."
-    msg "  -A <path>        Custom directory for animation scripts."
-    msg ""
-    msg "Example:"
-    msg "  ${script_name} -a dots -p 'Running <name> ' -i 0.5 sleep 5"
-    msg ""
-    msg "All command output will be sent to '<logs-dir>/<command-name>.log'."
+#   __animations__program_name: Name of the script.
+__animations::usage() {
+    __animations::msg "Usage: ${__animations__program_name} [options] [--] <command [args]>"
+    __animations::msg "Executes the specified command while displaying an animation."
+    __animations::msg ""
+    __animations::msg "Options:"
+    __animations::msg "  -f, --frames <list>          Comma-separated list of animation strings to use for frames."
+    __animations::msg "  -a, --animation <name>       Name of the animation to use. (default: dots)"
+    __animations::msg "  -i, --interval <seconds>     Time interval between frames. (default: 0.1)"
+    __animations::msg "  -p, --prefix <string>        Prefix text for the animation."
+    __animations::msg "  -s, --suffix <string>        Suffix text for the animation."
+    __animations::msg "  -A, --animations-dir <path>  Custom directory for animation scripts."
+    __animations::msg "  -L, --logs-dir <path>        Custom directory for storing log files."
+    __animations::msg "  -l, --list                   List all available animations."
+    __animations::msg "  -h, --help                   Display this help message."
+    __animations::msg ""
+    __animations::msg "Example:"
+    __animations::msg "  > ${__animations__program_name} -a metro -i 0.1 -p 'Sleeping ' sleep 3"
+    __animations::msg ""
+    __animations::msg "Notes:"
+    __animations::msg "  1. Use <name> in the prefix and suffix to include the command name."
+    __animations::msg "  2. All command output will be sent to '/logs/directory/command_name.log'."
 }
 
 ################################################################################
 #                                 ENTRY POINT                                  #
 ################################################################################
+::() {
+    # Used for messages
+    __animations__program_name="$(basename "${BASH_SOURCE[0]}")"
 
-# Check if the script is being run in a terminal
-if [[ ! -t 0 || ! -t 1 ]]; then
-    msg "Error: This script must be run in a terminal." "r"
-    exit 1
-fi
+    # Check if the script is being run in a terminal
+    if [[ ! -t 0 || ! -t 1 ]]; then
+        __animations::msg "${__animations__program_name}: This program must be run in a terminal." "r"
+        return 1
+    fi
 
-# Use for proper output formatting
-term_width=$(stty size | cut -d' ' -f2)
+    # Use for proper output formatting
+    __animations__term_width=$(stty size | cut -d' ' -f2)
 
-script_dir="$(dirname "${0}")"                          # Script directory
-animations_dir="$(realpath "${script_dir}/animations")" # Default animations directory
-log_dir="$(realpath "${script_dir}/logs")"              # Default logs directory
+    __animations__script_dir="$(dirname "${BASH_SOURCE[0]}")"                                       # Script directory
+    __animations__animations_dir="$(realpath "${__animations__script_dir:-${HOME:-.}}/animations")" # Default animations directory
+    __animations__log_dir="${TMPDIR:-${HOME:-.}}"/animation_logs                                    # Default logs directory
 
-# Default animation settings
-frames=(".  " ".. " "..." "   ") # Default frames
-prefix="Executing <name> "       # Default prefix
-suffix=""                        # Default suffix
-interval=0.2                     # Default interval
-command=()                       # Command to execute
-animation_name=""                # Animation name
+    # Default animation settings
+    __animations__frames=("   " ".  " ".. " "...") # Default frames
+    __animations__prefix="Executing <name> "       # Default prefix
+    __animations__suffix=""                        # Default suffix
+    __animations__interval=0.1                     # Default interval
+    __animations__command=()                       # Command to execute
+    __animations__animation_name=""                # Animation name
 
-# Parse command-line options
-parse_options "${@}"
-mkdir -p "${log_dir}" "${animations_dir}"
+    # Parse command-line options
+    __animations::options "${@}"
+    local exit_status=${?}
+    if [ "${exit_status}" -eq 5 ]; then
+        return
+    elif ! [ "${exit_status}" -eq 0 ]; then
+        return "${exit_status}"
+    fi
 
-# Load animation if specified
-if [[ -n "${animation_name}" ]]; then
-    load_animation
-fi
+    # Load animation if specified
+    if [[ -n "${__animations__animation_name}" ]]; then
+        __animations::load || return 1
+    fi
 
-# Check if a command is provided
-if [[ ${#command[@]} -eq 0 ]]; then
-    print_usage
-    exit
-fi
+    # Check if a command is provided
+    if [[ ${#__animations__command[@]} -eq 0 ]]; then
+        __animations::msg "_ requires a command to execute." "y"
+        __animations::msg "Try '${__animations__program_name} --help' for more information."
+        return
+    fi
 
-command_name=$(basename "${command[0]}")
+    __animations__command_name=$(basename "${__animations__command[0]}")
+    __animations__prefix="${__animations__prefix//<name>/${__animations__command_name}}" # Format __animations__prefix
+    __animations__suffix="${__animations__suffix//<name>/${__animations__command_name}}" # Format __animations__suffix
 
-prefix="${prefix//<name>/${command_name}}" # Format prefix
-suffix="${suffix//<name>/${command_name}}" # Format suffix
+    # Set log file
+    __animations__log_file="${__animations__log_dir}/${__animations__command_name}.log"
+    mkdir -p "${__animations__log_dir}" &&
+        touch "${__animations__log_file}"
 
-log_file="${log_dir}/${command_name}.log"
-touch "${log_file}"
+    # Execute command with animation
+    __animations::execute "${__animations__command[@]}"
+}
 
-start_animation && trap 'stop_animation ${anim_pid}; msg "${command_name} interrupted by user." "y"; exit 130' SIGINT
-execute_command
-stop_animation "${anim_pid}" && trap - SIGINT
-msg "${command_name} is done." "g"
+# Run animation function
+:: "${@}"

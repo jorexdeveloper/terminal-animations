@@ -1,5 +1,5 @@
 # Name: bubble
 
-frames=(
+__animations__frames=(
 	'·' 'o' 'O' 'O' 'o' '·'
 )

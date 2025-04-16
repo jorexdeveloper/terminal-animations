@@ -1,5 +1,5 @@
 # Name: earth
 
-frames=(
+__animations__frames=(
 	'🌍' '🌎' '🌏'
 )

@@ -1,5 +1,5 @@
 # Name: fireworks
 
-frames=(
-	'⢀' '⠠' '⠐' '⠈' '*' '*' ' '
+__animations__frames=(
+	'⢀' '⠠' '⠐' '⠈' '*' '*' ' '
 )

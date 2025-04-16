@@ -1,5 +1,5 @@
 # Name: braille
 
-frames=(
+__animations__frames=(
 	'⠁' '⠂' '⠄' '⡀' '⢀' '⠠' '⠐' '⠈'
 )

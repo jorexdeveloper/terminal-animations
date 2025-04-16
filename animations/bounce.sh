@@ -1,5 +1,5 @@
 # Name: bounce
 
-frames=(
+__animations__frames=(
 	'.' '·' '·'
 )

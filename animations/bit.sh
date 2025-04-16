@@ -1,5 +1,5 @@
 # Name: bit
 
-frames=(
+__animations__frames=(
 	'●' '⚬'
 )

@@ -1,5 +1,5 @@
 # Name: block2
 
-frames=(
+__animations__frames=(
 	'▏' '▎' '▍' '▌' '▋' '▊' '▉' '▉' '▊' '▋' '▌' '▍' '▎' '▏'
 )

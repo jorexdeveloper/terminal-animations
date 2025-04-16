@@ -1,5 +1,5 @@
 # Name: semi
 
-frames=(
+__animations__frames=(
 	'◐' '◓' '◑' '◒'
 )

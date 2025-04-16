@@ -1,5 +1,5 @@
 # Name: trigram
 
-frames=(
+__animations__frames=(
 	'☰' '☱' '☳' '☶' '☴'
 )

@@ -1,5 +1,5 @@
 # Name: arrow2
 
-frames=(
+__animations__frames=(
 	'◢' '◣' '◤' '◥'
 )

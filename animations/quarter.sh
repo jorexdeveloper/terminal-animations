@@ -1,5 +1,5 @@
 # Name: quarter
 
-frames=(
+__animations__frames=(
 	'▖' '▘' '▝' '▗'
 )

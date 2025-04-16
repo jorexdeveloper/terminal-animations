@@ -1,5 +1,5 @@
 # Name: pulse_orange
 
-frames=(
+__animations__frames=(
 	'🔸' '🔶' '🟠' '🟠' '🔶'
 )

@@ -1,5 +1,5 @@
 # Name: standard
 
-frames=(
-	'.  ' '.. ' '...' '   '
+__animations__frames=(
+	'   ' '.  ' '.. ' '...'
 )

@@ -1,5 +1,5 @@
 # Name: arrow
 
-frames=(
+__animations__frames=(
 	'↑' '↗' '→' '↘' '↓' '↙' '←' '↖'
 )
