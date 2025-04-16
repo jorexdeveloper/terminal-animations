@@ -316,9 +316,9 @@ __animations::usage() {
 		return
 	fi
 
-	__animations__command_name=$(basename "${__animations__command[0]}")
-	__animations__prefix="${__animations__prefix//<name>/${__animations__command_name}}" # Format __animations__prefix
-	__animations__suffix="${__animations__suffix//<name>/${__animations__command_name}}" # Format __animations__suffix
+	__animations__command_name=$(basename "${__animations__command[0]:-${__animations__command[1]}}") # Use of array index 1 is fix for zsh
+	__animations__prefix="${__animations__prefix//<name>/${__animations__command_name}}"              # Format __animations__prefix
+	__animations__suffix="${__animations__suffix//<name>/${__animations__command_name}}"              # Format __animations__suffix
 
 	# Set log file
 	__animations__log_file="${__animations__log_dir}/${__animations__command_name}.log"

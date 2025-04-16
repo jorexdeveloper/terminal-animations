@@ -269,7 +269,7 @@ __animations::usage() {
 ################################################################################
 ::() {
     # Used for messages
-    __animations__program_name="$(basename "${BASH_SOURCE[0]}")"
+    __animations__program_name="$(basename "${BASH_SOURCE[0]:-${0}}")"
 
     # Check if the script is being run in a terminal
     if [[ ! -t 0 || ! -t 1 ]]; then
@@ -308,14 +308,14 @@ __animations::usage() {
 
     # Check if a command is provided
     if [[ ${#__animations__command[@]} -eq 0 ]]; then
-        __animations::msg "_ requires a command to execute." "y"
+        __animations::msg "${__animations__program_name} requires a command to execute." "y"
         __animations::msg "Try '${__animations__program_name} --help' for more information."
         return
     fi
 
-    __animations__command_name=$(basename "${__animations__command[0]}")
-    __animations__prefix="${__animations__prefix//<name>/${__animations__command_name}}" # Format __animations__prefix
-    __animations__suffix="${__animations__suffix//<name>/${__animations__command_name}}" # Format __animations__suffix
+    __animations__command_name=$(basename "${__animations__command[0]:-${__animations__command[1]}}") # Use of array index 1 is fix for zsh
+    __animations__prefix="${__animations__prefix//<name>/${__animations__command_name}}"              # Format __animations__prefix
+    __animations__suffix="${__animations__suffix//<name>/${__animations__command_name}}"              # Format __animations__suffix
 
     # Set log file
     __animations__log_file="${__animations__log_dir}/${__animations__command_name}.log"
