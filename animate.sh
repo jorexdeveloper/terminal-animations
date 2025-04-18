@@ -52,7 +52,7 @@ __animations::msg() {
 # Sets:
 #   __animations__frames, __animations__prefix, __animations__suffix, __animations__interval, __animations__animation_name, __animations__command, __animations__log_dir, __animations__animations_dir.
 __animations::options() {
-    if ! args="$(getopt -n "${__animations__program_name}" -o "f:a:i:p:s:A:L:lh" --long "frames:,animation:,interval:,prefix:,suffix:,animations-dir:,log-dir:,list,help" -- "${@}")"; then
+    if ! args="$(getopt -n "${__animations__program_name}" -o "f:a:i:p:s:A:L:lhv" --long "frames:,animation:,interval:,prefix:,suffix:,animations-dir:,log-dir:,list,help,version" -- "${@}")"; then
         return 1
     fi
     eval set -- "${args}"
@@ -103,6 +103,10 @@ __animations::options() {
                 __animations::usage
                 return 5
                 ;;
+            -v | --version)
+                __animations::version
+                return 5
+                ;;
             --)
                 shift && break
                 ;;
@@ -112,7 +116,7 @@ __animations::options() {
     __animations__command=("${@}")
 }
 
-# Loads the specified animation script.
+# Loads the specified animation.
 # Variables:
 #   __animations__animation_name: Name of the animation to load.
 #   __animations__animations_dir: Directory containing animation scripts.
@@ -190,18 +194,21 @@ __animations::execute() {
         echo "Animation: ${__animations__animation_name:-default}"
         echo "${log_sep}"
     } >>"${__animations__log_file}"
+    interrupted() {
+        __animations::stop "${__animations__animation_pid}" &&
+            trap - SIGINT
+        __animations::msg "${__animations__command_name} interrupted by user." "y"
+    }
     __animations::start &&
-        trap '__animations::stop "${__animations__animation_pid}"; __animations::msg "${__animations__command_name} interrupted by user." "y"; trap - SIGINT; return 130' SIGINT
+        trap 'interrupted; return 130' SIGINT
     if "${@}" &>>"${__animations__log_file}"; then
         __animations::stop "${__animations__animation_pid}" &&
             trap - SIGINT
         __animations::msg "${__animations__command_name} is done." "g"
     else
         local exit_code=${?}
-        if [ "${exit_code}" -eq 130 ]; then
-            __animations::stop "${__animations__animation_pid}" &&
-                trap - SIGINT
-            __animations::msg "${__animations__command_name} interrupted by user." "y"
+        if [[ "${exit_code}" -eq 130 ]]; then
+            interrupted
             return ${exit_code}
         else
             local err_sep="$(printf '%*s' "${__animations__term_width}" '' | tr ' ' '-')"
@@ -238,30 +245,59 @@ __animations::list() {
     fi
 }
 
-# Prints usage information for the script.
+# Prints usage information for the program.
 # Variables:
-#   __animations__program_name: Name of the script.
+#   __animations__program_name: Name of the program.
+#   __animations__program_version: Version of the program.
 __animations::usage() {
-    __animations::msg "Usage: ${__animations__program_name} [options] [--] <command [args]>"
-    __animations::msg "Executes the specified command while displaying an animation."
-    __animations::msg ""
-    __animations::msg "Options:"
-    __animations::msg "  -f, --frames <list>          Comma-separated list of animation strings to use for frames."
-    __animations::msg "  -a, --animation <name>       Name of the animation to use. (default: dots)"
-    __animations::msg "  -i, --interval <seconds>     Time interval between frames. (default: 0.1)"
-    __animations::msg "  -p, --prefix <string>        Prefix text for the animation."
-    __animations::msg "  -s, --suffix <string>        Suffix text for the animation."
-    __animations::msg "  -A, --animations-dir <path>  Custom directory for animation scripts."
-    __animations::msg "  -L, --logs-dir <path>        Custom directory for storing log files."
-    __animations::msg "  -l, --list                   List all available animations."
-    __animations::msg "  -h, --help                   Display this help message."
-    __animations::msg ""
-    __animations::msg "Example:"
-    __animations::msg "  > ${__animations__program_name} -a metro -i 0.1 -p 'Sleeping ' sleep 3"
-    __animations::msg ""
-    __animations::msg "Notes:"
-    __animations::msg "  1. Use <name> in the prefix and suffix to include the command name."
-    __animations::msg "  2. All command output will be sent to '/logs/directory/command_name.log'."
+    printf "%s\n" "Usage: ${__animations__program_name} [OPTION] [--] COMMAND [ARGS...]"
+    printf "%s\n" ""
+    printf "%s\n" "${__animations__program_name} is a light-weight BASH script that displays"
+    printf "%s\n" "an animation while executing a command."
+    printf "%s\n" ""
+    printf "%s\n" "Options:"
+    printf "%s\n" "  -f, --frames <LIST>          Comma-separated list of strings to use as"
+    printf "%s\n" "                               animation frames."
+    printf "%s\n" "  -a, --animation <NAME>       Name of the animation to use."
+    printf "%s\n" "                               (default: dots)"
+    printf "%s\n" "  -i, --interval <SECONDS>     Time interval between frames."
+    printf "%s\n" "                               (default: 0.1)"
+    printf "%s\n" "  -p, --prefix <STRING>        Prefix text for the animation."
+    printf "%s\n" "  -s, --suffix <STRING>        Suffix text for the animation."
+    printf "%s\n" ""
+    printf "%s\n" "Note:"
+    printf "%s\n" "  Use <name> in the prefix and suffix to include the command name."
+    printf "%s\n" ""
+    printf "%s\n" "  -A, --animations-dir <PATH>  Custom directory for animation files."
+    printf "%s\n" "                               (default: HOME/.local/share/animations)"
+    printf "%s\n" "  -L, --logs-dir <PATH>        Custom directory for log files."
+    printf "%s\n" "                               (default: TMPDIR/animation_logs"
+    printf "%s\n" ""
+    printf "%s\n" "Note:"
+    printf "%s\n" "  All command output will be sent to 'logs-dir/name.log'."
+    printf "%s\n" ""
+    printf "%s\n" "  -l, --list                   List all available animations."
+    printf "%s\n" "  -h, --help                   Print help message and exit."
+    printf "%s\n" "  -v, --version                Print version and exit."
+    printf "%s\n" ""
+    printf "%s\n" "Examples:"
+    printf "%s\n" "  $ ${__animations__program_name} -a classic -i 0.1 -p 'Sleeping ' -- sleep 3"
+}
+
+# Prints program version.
+# Variables:
+#   __animations__program_name: Name of the program.
+#   __animations__program_version: Version of the program.
+__animations::version() {
+    local author="Jore <https://github.com/jorexdeveloper>"
+    printf "%s\n" "${__animations__program_name} version ${__animations__program_version}"
+    printf "%s\n" "Copyright (C) 2025 ${author}."
+    printf "%s\n" "License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>."
+    printf "%s\n" ""
+    printf "%s\n" "This is free software, you are free to change and redistribute it."
+    printf "%s\n" "There is NO WARRANTY, to the extent permitted by law."
+    printf "%s\n" ""
+    printf "%s\n" "Written by ${author}."
 }
 
 ################################################################################
@@ -270,19 +306,13 @@ __animations::usage() {
 ::() {
     # Used for messages
     __animations__program_name="$(basename "${BASH_SOURCE[0]:-${0}}")"
-
-    # Check if the script is being run in a terminal
-    if [[ ! -t 0 || ! -t 1 ]]; then
-        __animations::msg "${__animations__program_name}: This program must be run in a terminal." "r"
-        return 1
-    fi
+    __animations__program_version="1.0.4"
 
     # Use for proper output formatting
     __animations__term_width=$(stty size | cut -d' ' -f2)
 
-    __animations__script_dir="$(dirname "${BASH_SOURCE[0]}")"                                       # Script directory
-    __animations__animations_dir="$(realpath "${__animations__script_dir:-${HOME:-.}}/animations")" # Default animations directory
-    __animations__log_dir="${TMPDIR:-${HOME:-.}}"/animation_logs                                    # Default logs directory
+    __animations__animations_dir="$(realpath "${HOME:-.}/.local/share/animations")" # Default animations directory
+    __animations__log_dir="${TMPDIR:-.}/animation_logs"                             # Default logs directory
 
     # Default animation settings
     __animations__frames=("   " ".  " ".. " "...") # Default frames
@@ -295,9 +325,9 @@ __animations::usage() {
     # Parse command-line options
     __animations::options "${@}"
     local exit_status=${?}
-    if [ "${exit_status}" -eq 5 ]; then
+    if [[ "${exit_status}" -eq 5 ]]; then
         return
-    elif ! [ "${exit_status}" -eq 0 ]; then
+    elif ! [[ "${exit_status}" -eq 0 ]]; then
         return "${exit_status}"
     fi
 
@@ -313,9 +343,12 @@ __animations::usage() {
         return
     fi
 
-    __animations__command_name=$(basename "${__animations__command[0]:-${__animations__command[1]}}") # Use of array index 1 is fix for zsh
-    __animations__prefix="${__animations__prefix//<name>/${__animations__command_name}}"              # Format __animations__prefix
-    __animations__suffix="${__animations__suffix//<name>/${__animations__command_name}}"              # Format __animations__suffix
+    # Use of array index 1 is fix for zsh
+    __animations__command_name=$(basename "${__animations__command[0]:-${__animations__command[1]}}")
+
+    # Format prefix and suffix
+    __animations__prefix="${__animations__prefix//<name>/${__animations__command_name}}"
+    __animations__suffix="${__animations__suffix//<name>/${__animations__command_name}}"
 
     # Set log file
     __animations__log_file="${__animations__log_dir}/${__animations__command_name}.log"
@@ -326,5 +359,7 @@ __animations::usage() {
     __animations::execute "${__animations__command[@]}"
 }
 
-# Run animation function
+################################################################################
+#                                 ENTRY POINT                                  #
+################################################################################
 :: "${@}"

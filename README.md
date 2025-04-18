@@ -20,53 +20,49 @@
 
 Display animations as you wait for running commands in your terminal.
 
-## Demo
-
-![Demo animations](./demo.gif)
-
 <details>
     <summary>Table of Contents (Click to expand)</summary>
     <ul>
+        <li><a href="#demo" title="Go to this section">Demo</a></li>
         <li><a href="#overview" title="Go to this section">Overview</a></li>
         <li><a href="#why-use-this" title="Go to this section">Why Use This?</a></li>
-        <li><a href="#features" title="Go to this section">Features</a></li>
         <li><a href="#installation" title="Go to this section">Installation</a></li>
             <ul>
-                <li><a href="#download-the-latest-release-recommended" title="Go to this section">Download the Latest Release (Recommended)</a></li>
-                <li><a href="#clone-the-repository" title="Go to this section">Clone the Repository</a></li>
+                <li><a href="#download-the-latest-release" title="Go to this section">Download the Latest Release</a></li>
+                <li><a href="#run-makefile" title="Go to this section">Run Makefile</a></li>
+                <li><a href="#add-alias-optional-but-recommended" title="Go to this section">Add Alias (Optional but Recommended)</a></li>
+                <li><a href="#special-for-bashzsh-users" title="Go to this section">Special for Bash Users</a></li>
+                <li><a href="#advantages-of-sourcing-animatesh" title="Go to this section">Advantages of Sourcing animate.sh</a></li>
             </ul>
-        <li><a href="#setup" title="Go to this section">Setup</a></li>
+        <li><a href="#usage" title="Go to this section">Usage</a></li>
             <ul>
-                <li><a href="#sourcing-animationssh" title="Go to this section">Sourcing animations.sh</a></li>
-                <li><a href="#adding-animatesh-command-to-path" title="Go to this section">Adding animate.sh command to PATH</a></li>
-                <li><a href="#key-difference-between-the-setups" title="Go to this section">Key difference between the setups</a></li>
-            </ul>
-        <li><a href="#usage" title="Go to this section">Usage</a>
-            <ul>
-                <li><a href="#basic-usage" title="Go to this section">Basic usage</a></li>
                 <li><a href="#examples" title="Go to this section">Examples</a></li>
                 <li><a href="#command-output" title="Go to this section">Command Output</a></li>
             </ul>
+        <li><a href="#creating-a-new-animation" title="Go to this section">Creating a New Animation</a>
+            <ul>
+                <li><a href="#create-a-new-script-file" title="Go to this section">Create a New Script File</a></li>
+                <li><a href="#define-the-animation-frames" title="Go to this section">Define the Animation Frames</a></li>
+                <li><a href="#use-the-animation" title="Go to this section">Use the Animation</a></li>
+            </ul>
         </li>
-        <li><a href="#adding-custom-animations" title="Go to this section">Adding Custom Animations</a></li>
-        <li><a href="#contributing" title="Go to this section">Contributing</a></li>
         <li><a href="#license" title="Go to this section">License</a></li>
     </ul>
 </details>
 
+## Demo
+
+![Demo animations](./demo.gif)
+
 ## Overview
 
-**Terminal Animations** provides a lightweight Bash script that adds a touch of interactivity and fun to terminal commands. It enhances the user experience in terminal environments by providing visual feedback during command execution.
+**animate.sh** is a light-weight Bash script that adds a touch of interactivity and fun to terminal commands. It enhances the user experience in terminal environments by providing visual feedback during command execution.
 
 ## Why Use This?
 
 - Lightweight and easy to use.
 - No external dependencies required.
-- Fully customizable animations.
-- Works seamlessly with any terminal command.
-
-## Features
-
+- Works with multiple shells i.e bash, zsh, fish, etc.
 - Multiple animation styles and customizable frames.
 - Adjustable animation speed, prefixes, and suffixes.
 - Logs command output for debugging and auditing.
@@ -74,117 +70,126 @@ Display animations as you wait for running commands in your terminal.
 
 ## Installation
 
-You can install the animations in **one of two ways**:
+To install and setup **animate.sh** for any shell just:
 
-1. ### Download the Latest Release (Recommended)
+1. ### Download the Latest Release
 
    Visit the [Releases](https://github.com/jorexdeveloper/terminal-animations/releases "View Releases") page, download the latest release, and extract it:
 
    ```bash
-   tar -xzf terminal-animations-v*.tar.gz &&
+   tar -xzf terminal-animations-v*.tar.gz
       cd terminal-animations-v*
    ```
 
-2. ### Clone the Repository
+2. ### Run Makefile
 
    ```bash
-   git clone https://github.com/jorexdeveloper/terminal-animations.git &&
-      cd terminal-animations
+   make install
    ```
 
-## Setup
+3. ### Add Alias (Optional but Recommended)
 
-The setup can be done in **one of two ways**:
-
-1. ### Sourcing animations.sh
-
-   You can source `animations.sh` in your shell configuration file (e.g. `.bashrc` or `.zshrc`). This will automatically add a command named `::` to your shell's environment.
+   For convenience, add an alias to your shell's configuration file (e.g. .zshrc) with your default options:
 
    ```bash
-   # You can add such a line to your .bashrc
-   source /path/to/animations.sh
+   # You can add such a line to your shell's configuration
+   alias ::='animate.sh <your-default-options>'
    ```
 
-2. ### Adding animate.sh command to PATH
+4. ### Special for Bash/Zsh Users
 
-   Make sure `animate.sh` is executable then add it's directory to your `PATH`.
+   Bash/Zsh users can also source **animations.sh** (not animate.sh) in their _.bashrc_ file. This will automatically add a command named `::` to the shell's environment.
 
    ```bash
-   chmod +x /path/to/animate.sh
+   cp animations.sh $HOME/.animations.sh &&
+       echo 'source ~/.animations.sh' >> ~/.bashrc
    ```
 
-   ```bash
-   # You can add such a line to your .bashrc
-   export PATH="$PATH:/directory/of/animate.sh"
-   ```
+   > Restart your terminal to use the command `::`.
 
-   **Add Alias (Optional but Recommended)**
+   #### Advantages of Sourcing animate.sh
 
-   For convenience, add an alias to your shell configuration file (e.g. `.bashrc` or `.zshrc`) with your default options:
-
-   ```bash
-   # You can add such a line to your .bashrc
-   alias ::='/path/to/animate.sh <your-default-options>'
-   ```
-
-   > Reload your shell configuration or restart your terminal to use the alias `::`.
-
-   ### Key difference between the setups
-
-   **Sourcing `animations.sh`**
-
-   - Allows use of aliased commands
-   - Automatically creates `::` command in shell environment.
-
-   **Using `animate.sh`**
-
-   - Works well with other shells e.g. fish
+   - Allows use of aliased commands with the program.
+   - Automatically adds the `::` command to the shell environment.
 
 ## Usage
 
-### Basic usage
-
 ```bash
-:: [options] [--] <command [args]>
+animate.sh [OPTION] [--] COMMAND [ARGS...]
 ```
 
-See `:: --help` for the full usage.
+See `man animate.sh` or `animate.sh --help` for more information.
 
 ### Examples
 
 1. **Customise Animation**
 
    ```bash
-   :: -a spinner -- sleep 5
+   animate.sh -a spinner -p 'Sleeping ' sleep 5
    ```
 
 2. **Customise prefix**
 
    ```bash
-   :: -p "Downloading file with <name> " wget https://example.com/largefile.zip
+   # <name> will be replaced with the command name
+   animate.sh -a bar -p 'Downloading file with <name> ' wget https://example.com/largefile.zip
    ```
 
 3. **Customise Animation Frames**
 
    ```bash
-   :: -f "⠁,⠂,⠄,⡀,⢀,⠠,⠐,⠈" -i 0.1 tar -czf archive.tar.gz /path/to/directory
+   animate.sh -f '⠁,⠂,⠄,⡀,⢀,⠠,⠐,⠈' -i 0.1 -- tar -czf archive.tar.gz /path/to/directory
    ```
 
 ### Command Output
 
-Command output is sent to `/logs/directory/command_name.log`.
+Command output is sent to `logs_directory/command_name.log`.
 
-## Adding Custom Animations
+## Creating a New Animation
 
-To add new animations, refer to the [Animations Documentation](./ANIMATIONS.md "View Animations Documentation") for detailed instructions.
+The `animations` directory contains predefined animations but you can also create your own animations by following these steps:
 
-## Contributing
+1. ### Create a New Script File
 
-Contributions are welcome! Just:
+   Create a new file in the animations directory ending with `.sh`. This will be the name of the animation i.e. `classic.sh` for an animation named `classic`.
 
-1. Fork the repository.
-2. Make your changes and submit pull request.
+   ```bash
+   touch ~/.local/share/animations/classic.sh
+   ```
+
+2. ### Define the Animation Frames
+
+   Inside the script, define an array named `__animations__frames` containing the animation frames. i.e
+
+   ```bash
+   # Name: classic
+   __animations__frames=('-' '\' '|' '/')
+   ```
+
+3. ### Use the Animation
+
+   Use the `-a` option with the animation name (excluding the `.sh`) to use your new animation i.e
+
+   ```bash
+   # exclude the .sh in the name
+   animate.sh -a classic sleep 5
+   ```
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0. You are free to use, modify, and distribute this software under the terms of [the license](./LICENSE "View the license").
+```txt
+    Copyright (C) 2025  Jore
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+```
