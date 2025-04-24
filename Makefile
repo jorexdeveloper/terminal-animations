@@ -1,6 +1,6 @@
 NAME = animate.sh
 ANIMDIR = $(HOME)/.local/share
-PREFIX ?= /usr
+PREFIX ?= /usr/local
 MANDIR ?= $(PREFIX)/share/man
 
 all: @echo Run 'make install' to install $(NAME)
