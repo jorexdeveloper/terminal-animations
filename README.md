@@ -1,5 +1,9 @@
 <h1 align="center" style="color:#C9D1D9;">TERMINAL ANIMATIONS</h1>
 
+## Demo
+
+![Demo animations](./demo.gif)
+
 <p align="center">
 	<a href="https://github.com/jorexdeveloper/terminal-animations/stargazers" title="View Stargazers">
 		<img
@@ -49,10 +53,6 @@ Display animations as you wait for running commands in your terminal.
         <li><a href="#license" title="Go to this section">License</a></li>
     </ul>
 </details>
-
-## Demo
-
-![Demo animations](./demo.gif)
 
 ## Overview
 
