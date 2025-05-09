@@ -27,7 +27,7 @@ uninstall:
 manpages: clean
 	@echo Creating manpages for $(NAME).
 	@mkdir -p man/man1
-	@help2man -n "Executes a command while displaying an animation." $(NAME) > man/man1/$(NAME).1
+	@help2man -Nn "Executes a command while displaying an animation." -o man/man1/$(NAME).1 $(NAME)
 	@gzip man/man1/$(NAME).1
 
 clean:
