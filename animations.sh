@@ -317,7 +317,7 @@ __animations::version() {
 	__animations__term_width=$(stty size | cut -d' ' -f2)
 
 	__animations__animations_dir="$(realpath "${HOME:-.}/.local/share/animations")" # Default animations directory
-	__animations__log_dir="${TMPDIR:-.}/animation_logs"                             # Default logs directory
+	__animations__log_dir="${TMPDIR:-${TMP:-/tmp}}/animation_logs"                  # Default logs directory
 
 	# Default animation settings
 	__animations__frames=("   " ".  " ".. " "...") # Default frames
