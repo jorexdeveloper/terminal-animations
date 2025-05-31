@@ -38,7 +38,7 @@ release: version manpages
 
 version:
 	@echo Updating to new version $(VERSION)
-	@sed -Ei 's/(__animations__program_version=")[^"]*(")/\1$(VERSION)\2/g' $(NAME)
+	@sed -Ei 's/(__animations__program_version=")[^"]*(")/\1$(VERSION)\2/g' $(NAME) $(NAME2)
 
 clean:
 	@echo Cleaning up directory.

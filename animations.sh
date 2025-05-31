@@ -311,7 +311,7 @@ __animations::version() {
 ::() {
 	# Used for messages
 	__animations__program_name="$(basename "${BASH_SOURCE[0]:-${0}}")"
-	__animations__program_version="1.0.7"
+	__animations__program_version="1.0.8"
 
 	# Use for proper output formatting
 	__animations__term_width=$(stty size | cut -d' ' -f2)
