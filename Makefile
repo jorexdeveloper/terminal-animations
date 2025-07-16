@@ -3,7 +3,7 @@ NAME2 = animations.sh
 ANIMDIR = $(HOME)/.local/share
 PREFIX ?= /usr/local
 MANDIR ?= $(PREFIX)/share/man
-VERSION ?= unknown
+VERSION ?= 1.0.0
 
 all:
 	@echo Run 'make install' to install $(NAME)
@@ -27,8 +27,9 @@ uninstall:
 	@rm -rvf $(DESTDIR)$(PREFIX)/bin/$(NAME)
 	@rm -rvf $(DESTDIR)$(MANDIR)/man1/$(NAME).1* $(DESTDIR)$(ANIMDIR)/animations
 
-manpages: clean
+manpages:
 	@echo Creating manpages for $(NAME).
+	@rm -rf man
 	@mkdir -p man/man1
 
 	@help2man -Nn "Executes a command while displaying an animation." -o man/man1/$(NAME).1 $(NAME)
@@ -37,9 +38,8 @@ manpages: clean
 release: version manpages
 
 version:
+	@echo Updating $(NAME2)
+	@sed -E '1s/.*/# To be sourced during shell initialization/; 2s/(SC1090)/\1,SC2148/; s/$(NAME)\s{3}/$(NAME2)/; $$s/^/# /' $(NAME) >$(NAME2)
+
 	@echo Updating to new version $(VERSION)
 	@sed -Ei 's/(__animations__program_version=")[^"]*(")/\1$(VERSION)\2/g' $(NAME) $(NAME2)
-
-clean:
-	@echo Cleaning up directory.
-	@rm -rf man

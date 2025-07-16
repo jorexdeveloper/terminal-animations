@@ -1,9 +1,9 @@
-#!/usr/bin/bash
-# shellcheck disable=SC2155 disable=SC1090
+#!/usr/bin/env bash
+# shellcheck disable=SC1090,SC2155
 
 ################################################################################
 #                                                                              #
-#    animate.sh 2025-1.0                                                       #
+#    animate.sh                                                                #
 #                                                                              #
 #    Displays a loading animation while executing a command.                   #
 #                                                                              #
@@ -151,10 +151,16 @@ __animations::start() {
 			done
 		done
 	}
-	stty -echo                       # Hide input
-	printf "\033[?25l"               # Hide cursor
-	animate 2>/dev/null &            # Run animation in the background
-	__animations__animation_pid=${!} # Capture the PID of the animation process
+	# Workaround to disable job pid printing
+	local pid_file="$(mktemp --tmpdir animation_pid.XXXXXXXXXX)"
+	(
+		stty -echo                  # Hide input
+		printf "\033[?25l"          # Hide cursor
+		animate &                   # Run animation in the background
+		echo -n ${!} >"${pid_file}" # Save the animation PID
+	)
+	__animations__animation_pid="$(cat "${pid_file}")"
+	rm "${pid_file}" &>/dev/null
 	unset -f animate
 }
 
@@ -162,12 +168,10 @@ __animations::start() {
 # Arguments:
 #   1. Animation PID to stop.
 __animations::stop() {
-	local pid="${1}"
-	if [[ -n "${pid}" ]]; then
-		kill "${pid}" &>/dev/null
-		wait "${pid}" &>/dev/null
-		printf "\033[?25h" # Restore cursor
-		stty echo          # Restore input
+	printf "\033[?25h" # Restore cursor
+	stty echo          # Restore input
+	if [[ -n "${1}" ]]; then
+		kill "${1}" &>/dev/null
 	fi
 }
 
@@ -195,16 +199,17 @@ __animations::execute() {
 		echo "${log_sep}"
 	} >>"${__animations__log_file}"
 	interrupted() {
+		trap - INT
 		__animations::stop "${__animations__animation_pid}" &&
-			trap - SIGINT
-		__animations::msg "${__animations__command_name} interrupted by user." "y"
+			__animations::msg "${__animations__command_name} interrupted by user." "y"
+		return 130
 	}
 	__animations::start &&
-		trap 'interrupted; return 130' SIGINT
+		trap interrupted INT
 	if "${@}" &>>"${__animations__log_file}"; then
+		trap - INT
 		__animations::stop "${__animations__animation_pid}" &&
-			trap - SIGINT
-		__animations::msg "${__animations__command_name} is done." "g"
+			__animations::msg "${__animations__command_name} is done." "g"
 	else
 		local exit_code=${?}
 		if [[ "${exit_code}" -eq 130 ]]; then
@@ -306,7 +311,7 @@ __animations::version() {
 ::() {
 	# Used for messages
 	__animations__program_name="$(basename "${BASH_SOURCE[0]:-${0}}")"
-	__animations__program_version="1.0.8"
+	__animations__program_version="2.0.0"
 
 	# Use for proper output formatting
 	__animations__term_width=$(stty size | cut -d' ' -f2)
