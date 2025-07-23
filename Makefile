@@ -1,5 +1,5 @@
-NAME = animate.sh
-NAME2 = animations.sh
+NAME = tan
+NAME2 = tan.sh
 ANIMDIR = $(HOME)/.local/share
 PREFIX ?= /usr/local
 MANDIR ?= $(PREFIX)/share/man
@@ -32,14 +32,14 @@ manpages:
 	@rm -rf man
 	@mkdir -p man/man1
 
-	@help2man -Nn "Executes a command while displaying an animation." -o man/man1/$(NAME).1 $(NAME)
+	@help2man -Nn "Shows an animation while executing a given command." -o man/man1/$(NAME).1 $(NAME)
 	@gzip man/man1/$(NAME).1
 
 release: version manpages
 
 version:
 	@echo Updating $(NAME2)
-	@sed -E '1s/.*/# To be sourced during shell initialization/; 2s/(SC1090)/\1,SC2148/; s/$(NAME)\s{3}/$(NAME2)/; $$s/^/# /' $(NAME) >$(NAME2)
+	@sed -E '1s/.*/# To be sourced during shell initialization/; 2s/(SC1090)/\1,SC2148/; s/$(NAME)\s{3}/$(NAME2)/; s/(^\s*__animations__program_name=").+(")$$/\1$(NAME)\2/; $$s/^/# /' $(NAME) >$(NAME2)
 
 	@echo Updating to new version $(VERSION)
 	@sed -Ei 's/(__animations__program_version=")[^"]*(")/\1$(VERSION)\2/g' $(NAME) $(NAME2)

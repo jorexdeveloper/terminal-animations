@@ -33,10 +33,10 @@ Display animations as you wait for running commands in your terminal.
         <li><a href="#installation" title="Go to this section">Installation</a></li>
             <ul>
                 <li><a href="#download-the-latest-release" title="Go to this section">Download the Latest Release</a></li>
-                <li><a href="#run-makefile" title="Go to this section">Run Makefile</a></li>
+                <li><a href="#run-the-makefile" title="Go to this section">Run the Makefile</a></li>
                 <li><a href="#add-alias-optional-but-recommended" title="Go to this section">Add Alias (Optional but Recommended)</a></li>
                 <li><a href="#special-for-bashzsh-users" title="Go to this section">Special for Bash Users</a></li>
-                <li><a href="#advantages-of-sourcing-animatesh" title="Go to this section">Advantages of Sourcing animate.sh</a></li>
+                <li><a href="#advantages-of-sourcing-animatesh" title="Go to this section">Advantages of Sourcing tan</a></li>
             </ul>
         <li><a href="#usage" title="Go to this section">Usage</a></li>
             <ul>
@@ -56,7 +56,7 @@ Display animations as you wait for running commands in your terminal.
 
 ## Overview
 
-**animate.sh** is a light-weight Bash script that adds a touch of interactivity and fun to terminal commands. It enhances the user experience in terminal environments by providing visual feedback during command execution.
+**tan** is a light-weight Bash script that adds a touch of interactivity and fun to terminal commands. It enhances the user experience in terminal environments by providing visual feedback during command execution.
 
 ## Why Use This?
 
@@ -70,7 +70,7 @@ Display animations as you wait for running commands in your terminal.
 
 ## Installation
 
-To install and setup **animate.sh** for any shell just:
+To install and setup **tan** for any shell just:
 
 1. ### Download the Latest Release
 
@@ -81,7 +81,7 @@ To install and setup **animate.sh** for any shell just:
       cd terminal-animations-v*
    ```
 
-2. ### Run Makefile
+2. ### Run the Makefile
 
    ```bash
    make install
@@ -93,21 +93,21 @@ To install and setup **animate.sh** for any shell just:
 
    ```bash
    # You can add such a line to your shell's configuration
-   alias ::='animate.sh <your-default-options>'
+   alias ::='tan <your-default-options>'
    ```
 
 4. ### Special for Bash/Zsh Users
 
-   Bash/Zsh users can also source **animations.sh** (not animate.sh) in their _.bashrc_ file. This will automatically add a command named `::` to the shell's environment.
+   Bash/Zsh users can also source **tan.sh** (not tan) in their _.bashrc/.zshrc_ file. This will automatically add a command named `::` to the shell's environment.
 
    ```bash
-   cp animations.sh $HOME/.animations.sh &&
-       echo 'source ~/.animations.sh' >> ~/.bashrc
+   cp tan.sh $HOME/.tan.sh &&
+       echo 'source ~/.tan.sh' >> ~/.bashrc
    ```
 
    > Restart your terminal to use the command `::`.
 
-   #### Advantages of Sourcing animate.sh
+   #### Advantages of Sourcing tan
 
    - Allows use of aliased commands with the program.
    - Automatically adds the `::` command to the shell environment.
@@ -115,35 +115,35 @@ To install and setup **animate.sh** for any shell just:
 ## Usage
 
 ```bash
-animate.sh [OPTION] [--] COMMAND [ARGS...]
+tan [OPTION] [--] COMMAND [ARGS...]
 ```
 
-See `man animate.sh` or `animate.sh --help` for more information.
+See `man tan` or `tan --help` for more information.
 
 ### Examples
 
 1. **Customise Animation**
 
    ```bash
-   animate.sh -a spinner -p 'Sleeping ' sleep 5
+   tan -a classic -p 'Sleeping ' sleep 5
    ```
 
 2. **Customise prefix**
 
    ```bash
    # <name> will be replaced with the command name
-   animate.sh -a bar -p 'Downloading file with <name> ' wget https://example.com/largefile.zip
+   tan -a bar -p 'Downloading file with <name> ' wget https://example.com/largefile.zip
    ```
 
 3. **Customise Animation Frames**
 
    ```bash
-   animate.sh -f '⠁,⠂,⠄,⡀,⢀,⠠,⠐,⠈' -i 0.1 -- tar -czf archive.tar.gz /path/to/directory
+   tan -f '⠁,⠂,⠄,⡀,⢀,⠠,⠐,⠈' -i 0.1 -- tar -czf archive.tar.gz /path/to/directory
    ```
 
 ### Command Output
 
-Command output is sent to `logs_directory/command_name.log`.
+Command output is sent to `<logs_directory>/<command_name>.log`.
 
 ## Creating a New Animation
 
@@ -172,7 +172,7 @@ The `animations` directory contains predefined animations but you can also creat
 
    ```bash
    # exclude the .sh in the name
-   animate.sh -a classic sleep 5
+   tan -a classic sleep 5
    ```
 
 ## License
