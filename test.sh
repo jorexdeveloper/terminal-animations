@@ -9,7 +9,7 @@ cmd="$(realpath "$(dirname "${0}")/tan")"
 
 cd "${animations_dir}" || exit 1
 for animation in *.sh; do
-    animation="${animation%.sh}"
-    clear
-    "${cmd}" -A . -a "${animation}" -p "${animation} " -- sleep 5 || exit
+	animation="${animation%.sh}"
+	# clear
+	"${cmd}" -A . -a "${animation}" -p "${animation} " "${@}" -- sleep 5 || exit
 done

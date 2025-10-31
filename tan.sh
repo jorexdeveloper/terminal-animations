@@ -232,8 +232,8 @@ __animations::execute() {
 		trap '__animations::interrupted ${?}' "${signals[@]}"
 	if eval "${*}" &>>"${__animations__log_file}"; then
 		trap - "${signals[@]}"
-		__animations::stop "${__animations__animation_pid}" &&
-			__animations::msg "${__animations__command_name} is done." "g"
+		__animations::stop "${__animations__animation_pid}"
+		__animations::msg "${__animations__command_name} is done." "g"
 	else
 		local exit_code=${?}
 		if [[ ${exit_code} -gt 128 && ${exit_code} -lt 255 ]]; then
@@ -344,7 +344,7 @@ __animations::version() {
 ::() {
 	# Used for messages
 	__animations__program_name="tan"
-	__animations__program_version="2.0.1"
+	__animations__program_version="2.0.2"
 
 	# Use for proper output formatting
 	__animations__term_width=$(stty size | cut -d' ' -f2)
