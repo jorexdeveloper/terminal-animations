@@ -6,10 +6,10 @@
 
 animations_dir="$(realpath "$(dirname "${0}")/animations")"
 cmd="$(realpath "$(dirname "${0}")/tan")"
+echo
 
 cd "${animations_dir}" || exit 1
 for animation in *.sh; do
 	animation="${animation%.sh}"
-	# clear
-	"${cmd}" -A . -a "${animation}" -p "${animation} " "${@}" -- sleep 5 || exit
+	printf "\r\e[1A\e[0J" && "${cmd}" -A . -a "${animation}" -p "${animation} " "${@}" -- sleep 5 || exit
 done
